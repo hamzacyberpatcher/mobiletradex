@@ -1,0 +1,13 @@
+node_modules
+.next
+next-env.d.ts
+*.tsbuildinfo
+
+# local tooling
+.claude/
+
+# course documents: contain student names and roll numbers, not part of the code
+/HCI_Project Proposal_ MobileTradeX.txt
+/HCI_documentation.txt
+/Project_Phase_4.txt
+/Rubric.docx.txt
