@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
+import Dialog from "@/components/Dialog";
 import { brandOf, defectsOf, deviceTitle, gradeOf, rs, runTest, suggestPrice, testIsFresh, type Draft, type Photos } from "@/lib/listing";
-import { ptaOptions, ageOptions } from "@/data/listing";
+import { ptaOptions, ageOptions, photoSlots } from "@/data/listing";
 import { Check } from "./ui";
 
 const Empty = ({ children }: { children: string }) => <span className="text-ink/40">{children}</span>;
@@ -19,7 +21,13 @@ export default function ListingPreview({ draft: d, photos }: { draft: Draft; pho
   const score = fresh ? runTest(d).score : null;
   const price = Number(d.price.replace(/\D/g, ""));
   const fair = suggestPrice(d)?.fair;
-  const photo = photos.front ?? Object.values(photos)[0];
+  // every uploaded photo, in the order of the upload slots
+  const shots = photoSlots.filter((s) => photos[s.id]).map((s) => ({ id: s.id, label: s.label, ...photos[s.id] }));
+  const [pick, setPick] = useState(0);
+  const [zoom, setZoom] = useState(false);
+  const at = Math.min(pick, Math.max(0, shots.length - 1));
+  const photo = shots[at];
+  const step = (n: number) => setPick((at + n + shots.length) % shots.length);
   const pta = ptaOptions.find((p) => p.value === d.pta)?.label;
   const age = ageOptions.find((a) => a.value === d.age)?.label;
 
@@ -27,8 +35,13 @@ export default function ListingPreview({ draft: d, photos }: { draft: Draft; pho
     <article aria-label="Listing preview" className="overflow-hidden rounded-3xl border border-ink/10 bg-frost-50 shadow-[0_20px_50px_-30px_rgba(14,24,33,0.5)]">
       <div className="relative aspect-[16/10] bg-ink/5">
         {photo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={photo.url} alt="Front of the phone" className="h-full w-full object-cover" />
+          <button type="button" onClick={() => setZoom(true)} aria-label={`Enlarge photo: ${photo.label}`} className="group block h-full w-full cursor-zoom-in">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={photo.url} alt={`${photo.label}: ${photo.name}`} className="h-full w-full object-cover" />
+            <span className="absolute bottom-2 right-2 rounded-full bg-night/70 px-2.5 py-1 text-xs font-medium text-snow opacity-0 backdrop-blur transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+              Click to enlarge
+            </span>
+          </button>
         ) : brand ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={`/brands/${brand.slug}.svg`} alt="" className="h-full w-full object-cover opacity-90" />
@@ -40,7 +53,46 @@ export default function ListingPreview({ draft: d, photos }: { draft: Draft; pho
             <Check size={11} /> Verified Hardware
           </span>
         )}
+        {shots.length > 1 && (
+          <span className="absolute right-3 top-3 rounded-full bg-night/70 px-2.5 py-1 text-xs font-medium text-snow backdrop-blur">
+            {at + 1} / {shots.length}
+          </span>
+        )}
       </div>
+
+      {shots.length > 1 && (
+        <ul aria-label="All photos" className="flex gap-2 overflow-x-auto px-5 pt-4">
+          {shots.map((p, i) => (
+            <li key={p.id} className="shrink-0">
+              <button
+                type="button"
+                onClick={() => setPick(i)}
+                aria-label={`Show photo: ${p.label}`}
+                aria-current={i === at}
+                className={`block h-14 w-14 overflow-hidden rounded-lg border-2 transition-colors ${i === at ? "border-deep" : "border-transparent opacity-75 hover:opacity-100"}`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={p.url} alt="" className="h-full w-full object-cover" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <Dialog open={zoom && !!photo} onClose={() => setZoom(false)} wide title={photo?.label ?? "Photo"} description={shots.length > 1 ? `Photo ${at + 1} of ${shots.length}` : undefined}>
+        {photo && (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={photo.url} alt={`${photo.label}: ${photo.name}`} className="max-h-[65vh] w-full rounded-xl bg-ink/5 object-contain" />
+            {shots.length > 1 && (
+              <div className="mt-4 flex justify-between gap-3">
+                <button type="button" className="btn btn-quiet !py-2" onClick={() => step(-1)}>Previous</button>
+                <button type="button" data-autofocus className="btn btn-primary !py-2" onClick={() => step(1)}>Next</button>
+              </div>
+            )}
+          </>
+        )}
+      </Dialog>
 
       <div className="space-y-4 p-5">
         {/* 1. name */}

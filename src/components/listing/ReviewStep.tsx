@@ -40,7 +40,7 @@ export default function ReviewStep({ draft: d, set, errors, goTo, photoCount }: 
       items: [
         ["Asking price", `${rs(Number(d.price))}${d.negotiable ? ", open to offers" : ", fixed price"}`],
         ["Payment", paymentOptions.find((p) => p.value === d.payment)?.label ?? ""],
-        ["Meetup", `${d.meetup}, ${d.city}`],
+        ["Meetup", d.meetupCustom && d.meetup.toLowerCase().includes(d.city.toLowerCase()) ? d.meetup : `${d.meetup}, ${d.city}`],
       ],
     },
   ];

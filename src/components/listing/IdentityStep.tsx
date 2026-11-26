@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { digits, formatCnic, formatPhone } from "@/lib/listing";
+import { check, digits, formatCnic, formatPhone } from "@/lib/listing";
 import { useToast } from "@/components/ToastProvider";
 import { Callout, Check, Field, ProgressBar, StageList, inputCls } from "./ui";
 import type { StepProps } from "./types";
@@ -17,7 +17,7 @@ const STAGE_MS = 1000;
 /** Prototype only: any CNIC starting 11111 simulates a name mismatch; the OTP is always 123456. */
 const DEMO_OTP = "123456";
 
-export default function IdentityStep({ draft, set, errors }: StepProps) {
+export default function IdentityStep({ draft, set, errors, hints }: StepProps) {
   const { toast } = useToast();
   const [phase, setPhase] = useState<Phase>("form");
   const [cursor, setCursor] = useState(0);
@@ -41,7 +41,7 @@ export default function IdentityStep({ draft, set, errors }: StepProps) {
     return () => clearTimeout(timer.current);
   }, [phase, cursor]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const formOk = digits(draft.cnic).length === 13 && /^03\d{9}$/.test(digits(draft.phone)) && draft.name.trim().length >= 3;
+  const formOk = check.cnic(draft.cnic).ok && check.phone(draft.phone).ok && check.name(draft.name).ok;
   const start = () => {
     setCursor(0);
     setOtp("");
@@ -94,18 +94,18 @@ export default function IdentityStep({ draft, set, errors }: StepProps) {
     <div className="space-y-6">
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <Field label="Full name" hint="Exactly as printed on your CNIC." error={errors.name}>
+          <Field label="Full name" hint={hints.name ?? "Exactly as printed on your CNIC."} error={errors.name}>
             {(p) => (
               <input {...p} className={inputCls(!!errors.name)} autoComplete="name" value={draft.name} disabled={locked} placeholder="Ayesha Siddiqui" onChange={(e) => set({ name: e.target.value })} />
             )}
           </Field>
         </div>
-        <Field label="CNIC number" hint="13 digits. Never shown to buyers." error={errors.cnic}>
+        <Field label="CNIC number" hint={hints.cnic ?? "13 digits. Never shown to buyers."} error={errors.cnic}>
           {(p) => (
             <input {...p} className={`${inputCls(!!errors.cnic)} font-mono tracking-wide`} inputMode="numeric" autoComplete="off" value={draft.cnic} disabled={locked} placeholder="35202-1234567-1" onChange={(e) => set({ cnic: formatCnic(e.target.value) })} />
           )}
         </Field>
-        <Field label="Mobile number" hint="We send a one-time code to this number." error={errors.phone}>
+        <Field label="Mobile number" hint={hints.phone ?? "We send a one-time code to this number."} error={errors.phone}>
           {(p) => (
             <input {...p} className={`${inputCls(!!errors.phone)} font-mono tracking-wide`} inputMode="tel" autoComplete="tel" value={draft.phone} disabled={locked} placeholder="0300-1234567" onChange={(e) => set({ phone: formatPhone(e.target.value) })} />
           )}
@@ -138,7 +138,7 @@ export default function IdentityStep({ draft, set, errors }: StepProps) {
 
       {phase === "otp" && (
         <div className="rounded-2xl border border-ink/10 p-4">
-          <Field label="6-digit code" hint={`Sent to ${draft.phone}. Prototype: use ${DEMO_OTP}.`} error={otpError}>
+          <Field label="6-digit code" hint={otp && otp.length < 6 ? `${otp.length} of 6 digits` : `Sent to ${draft.phone}. Prototype: use ${DEMO_OTP}.`} error={otpError}>
             {(p) => (
               <div className="flex gap-3">
                 <input
@@ -172,11 +172,6 @@ export default function IdentityStep({ draft, set, errors }: StepProps) {
           <button type="button" onClick={start} disabled={!formOk} className="btn btn-primary disabled:cursor-not-allowed disabled:opacity-50">
             Verify with NADRA
           </button>
-          {errors.verify && (
-            <p role="alert" className="text-sm text-crack" aria-invalid="true" tabIndex={-1}>
-              {errors.verify}
-            </p>
-          )}
           {!formOk && <p className="text-sm text-ink/65">Fill in all three fields to start the check.</p>}
           <p className="text-xs text-ink/55">
             Prototype: a CNIC starting 11111 simulates a mismatch; any other 13 digits pass.

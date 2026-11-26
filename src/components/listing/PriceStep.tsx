@@ -3,19 +3,27 @@
 import { cities, paymentOptions } from "@/data/listing";
 import { digits, rs, suggestPrice } from "@/lib/listing";
 import { useToast } from "@/components/ToastProvider";
+import PlacePicker from "./PlacePicker";
 import { Callout, ChipGroup, Field, inputCls } from "./ui";
 import type { StepProps } from "./types";
+
+const OTHER = "__other";
 
 const fmt = (s: string) => {
   const d = digits(s).slice(0, 7).replace(/^0+/, "");
   return d ? Number(d).toLocaleString("en-US") : "";
 };
 
-export default function PriceStep({ draft, set, errors }: StepProps) {
+export default function PriceStep({ draft, set, errors, hints }: StepProps) {
   const { toast } = useToast();
   const sug = suggestPrice(draft);
   const price = Number(digits(draft.price));
-  const city = cities.find((c) => c.name === draft.city);
+  const city = draft.cityCustom ? undefined : cities.find((c) => c.name === draft.city);
+  // other cities have no safe zones of ours, so the meetup is always searched
+  const placeOnly = draft.cityCustom;
+  const showMeetup = placeOnly ? draft.cityVerified : !!city;
+  // Google results for the meetup are limited to this outline
+  const bounds = placeOnly ? draft.cityBox : (city?.box ?? null);
 
   const diff = sug && price ? Math.round(((price - sug.fair) / sug.fair) * 100) : 0;
   const feedback =
@@ -34,6 +42,12 @@ export default function PriceStep({ draft, set, errors }: StepProps) {
 
   return (
     <div className="space-y-8">
+      {!sug && (
+        <Callout title="No price suggestion for this model yet">
+          {draft.model ? `${draft.model} is not in our price list` : "Your model is not in our price list"}, so you set the price. Check a few recent sold listings for the same model and storage, and be honest about the condition.
+        </Callout>
+      )}
+
       {sug && (
         <section aria-label="Suggested price" className="rounded-2xl border border-deep/40 bg-deep/10 p-5">
           <p className="text-sm font-medium text-ink/75">Suggested price for your phone</p>
@@ -64,7 +78,7 @@ export default function PriceStep({ draft, set, errors }: StepProps) {
       )}
 
       <div>
-        <Field label="Your asking price" error={errors.price}>
+        <Field label="Your asking price" error={errors.price} hint={hints.price}>
           {(p) => (
             <div className="flex flex-wrap items-stretch gap-3">
               <div className="relative min-w-[14rem] flex-1">
@@ -96,16 +110,66 @@ export default function PriceStep({ draft, set, errors }: StepProps) {
 
       <ChipGroup legend="How do you want to be paid?" options={paymentOptions} value={draft.payment} onChange={(v) => set({ payment: v })} />
 
-      <ChipGroup legend="Your city" options={cities.map((c) => ({ value: c.name, label: c.name }))} value={draft.city} onChange={(v) => set({ city: v, meetup: "" })} error={errors.city} columns="sm:grid-cols-5" />
-      {city && (
-        <ChipGroup
-          legend="Safe meetup zone"
-          options={city.zones.map((z) => ({ value: z, label: z, hint: "Verified public place with CCTV" }))}
-          value={draft.meetup}
-          onChange={(v) => set({ meetup: v })}
-          error={errors.meetup}
-          columns="sm:grid-cols-2"
+      <ChipGroup
+        legend="Your city"
+        options={[...cities.map((c) => ({ value: c.name, label: c.name })), { value: OTHER, label: "Another city" }]}
+        value={draft.cityCustom ? OTHER : draft.city}
+        onChange={(v) =>
+          v === OTHER
+            ? set({ cityCustom: true, city: "", cityVerified: false, cityBox: null, meetup: "", meetupCustom: true })
+            : set({ cityCustom: false, city: v, cityVerified: false, cityBox: null, meetup: "", meetupCustom: false })
+        }
+        error={draft.cityCustom ? undefined : errors.city}
+        columns="sm:grid-cols-3"
+      />
+      {draft.cityCustom && (
+        <PlacePicker
+          mode="city"
+          label="Search for your city"
+          value={draft.city}
+          verified={draft.cityVerified}
+          onChange={(t) => set({ city: t, cityVerified: false, cityBox: null, meetup: "" })}
+          onResolve={(t, box) => set({ city: t, cityVerified: true, cityBox: box, meetup: "" })}
+          error={errors.city}
+          placeholder="Sialkot"
         />
+      )}
+
+      {showMeetup && (
+        <div className="space-y-4">
+          {!placeOnly && city && (
+            <ChipGroup
+              legend="Meetup place"
+              options={[
+                ...city.zones.map((z) => ({ value: z, label: z, hint: "Verified public place with CCTV" })),
+                { value: OTHER, label: "Somewhere else", hint: "Search for another public place" },
+              ]}
+              value={draft.meetupCustom ? OTHER : draft.meetup}
+              onChange={(v) => (v === OTHER ? set({ meetupCustom: true, meetup: "" }) : set({ meetupCustom: false, meetup: v }))}
+              error={draft.meetupCustom ? undefined : errors.meetup}
+              columns="sm:grid-cols-2"
+            />
+          )}
+          {(placeOnly || draft.meetupCustom) && (
+            <>
+              <PlacePicker
+                mode="place"
+                label={placeOnly ? `Meetup place in ${draft.city}` : "Search for a meetup place"}
+                value={draft.meetup}
+                onChange={(t) => set({ meetup: t })}
+                onResolve={(t) => set({ meetup: t })}
+                bounds={bounds}
+                cityName={draft.city}
+                error={errors.meetup}
+                hint={hints.meetup}
+                placeholder="Mall, café or landmark, with the area"
+              />
+              <Callout kind="warn" title="This is not a verified safe zone">
+                Choose a busy public place such as a mall or café, meet in daylight, and tell someone where you are going. Escrow still protects the payment.
+              </Callout>
+            </>
+          )}
+        </div>
       )}
     </div>
   );

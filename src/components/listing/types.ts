@@ -5,4 +5,6 @@ export type StepProps = {
   draft: Draft;
   set: (patch: Partial<Draft>) => void;
   errors: Errors;
+  /** grey progress text for unfinished text boxes, e.g. "5 of 13 digits" */
+  hints: Errors;
 };

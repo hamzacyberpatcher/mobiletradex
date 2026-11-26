@@ -16,6 +16,7 @@ export default function Dialog({
   description,
   children,
   closeOnBackdrop = true,
+  wide = false,
 }: {
   open: boolean;
   onClose: () => void;
@@ -23,6 +24,8 @@ export default function Dialog({
   description?: string;
   children: React.ReactNode;
   closeOnBackdrop?: boolean;
+  /** roomier box for photos and other media */
+  wide?: boolean;
 }) {
   const box = useRef<HTMLDivElement>(null);
   const closeRef = useRef(onClose);
@@ -85,7 +88,7 @@ export default function Dialog({
         aria-labelledby="dlg-title"
         aria-describedby={description ? "dlg-desc" : undefined}
         tabIndex={-1}
-        className="relative w-full max-w-[30rem] animate-dialog-in rounded-3xl border border-ink/10 bg-frost-50 p-6 text-ink shadow-[0_30px_80px_-20px_rgba(14,24,33,0.6)] outline-none motion-reduce:animate-none md:p-8"
+        className={`relative w-full ${wide ? "max-w-3xl" : "max-w-[30rem]"} animate-dialog-in rounded-3xl border border-ink/10 bg-frost-50 p-6 text-ink shadow-[0_30px_80px_-20px_rgba(14,24,33,0.6)] outline-none motion-reduce:animate-none md:p-8`}
       >
         <button
           type="button"

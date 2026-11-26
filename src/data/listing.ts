@@ -103,7 +103,64 @@ export const phoneBrands: { slug: string; name: string; models: PhoneModel[] }[]
       { name: "10 Pro", base: 108000, storage: ["128 GB", "256 GB"], ram: ["8 GB", "12 GB"] },
     ],
   },
+  {
+    slug: "huawei",
+    name: "Huawei",
+    models: [
+      { name: "P30 Pro", base: 48000, storage: ["128 GB", "256 GB"], ram: ["8 GB"] },
+      { name: "Nova 9", base: 45000, storage: ["128 GB", "256 GB"], ram: ["8 GB"] },
+      { name: "Nova Y70", base: 30000, storage: ["64 GB", "128 GB"], ram: ["4 GB", "6 GB"] },
+    ],
+  },
+  {
+    slug: "honor",
+    name: "Honor",
+    models: [
+      { name: "X7", base: 27000, storage: ["128 GB"], ram: ["4 GB"] },
+      { name: "X8", base: 36000, storage: ["128 GB"], ram: ["6 GB", "8 GB"] },
+      { name: "90", base: 85000, storage: ["256 GB", "512 GB"], ram: ["8 GB", "12 GB"] },
+    ],
+  },
+  {
+    slug: "motorola",
+    name: "Motorola",
+    models: [
+      { name: "Moto G32", base: 24000, storage: ["64 GB", "128 GB"], ram: ["4 GB", "6 GB"] },
+      { name: "Moto G54", base: 42000, storage: ["128 GB", "256 GB"], ram: ["8 GB", "12 GB"] },
+      { name: "Edge 30", base: 55000, storage: ["128 GB", "256 GB"], ram: ["8 GB"] },
+    ],
+  },
+  {
+    slug: "nokia",
+    name: "Nokia",
+    models: [
+      { name: "G21", base: 18000, storage: ["64 GB", "128 GB"], ram: ["4 GB"] },
+      { name: "G42 5G", base: 32000, storage: ["128 GB"], ram: ["4 GB", "6 GB"] },
+    ],
+  },
+  {
+    slug: "itel",
+    name: "Itel",
+    models: [
+      { name: "A60s", base: 14000, storage: ["64 GB", "128 GB"], ram: ["4 GB"] },
+      { name: "P40", base: 16000, storage: ["128 GB"], ram: ["4 GB"] },
+      { name: "S23", base: 22000, storage: ["128 GB", "256 GB"], ram: ["8 GB"] },
+    ],
+  },
+  {
+    slug: "sony",
+    name: "Sony",
+    models: [
+      { name: "Xperia 10 III", base: 40000, storage: ["128 GB"], ram: ["6 GB"] },
+      { name: "Xperia 5 II", base: 65000, storage: ["128 GB", "256 GB"], ram: ["8 GB"] },
+      { name: "Xperia 1 III", base: 90000, storage: ["256 GB", "512 GB"], ram: ["12 GB"] },
+    ],
+  },
 ];
+
+/** Offered when the seller's model is not in the list above. */
+export const genericStorage = ["32 GB", "64 GB", "128 GB", "256 GB", "512 GB", "1 TB"];
+export const genericRam = ["2 GB", "3 GB", "4 GB", "6 GB", "8 GB", "12 GB", "16 GB"];
 
 export const colors = ["Black", "White", "Silver", "Blue", "Green", "Gold", "Purple", "Red", "Other"];
 
@@ -170,12 +227,27 @@ export const paymentOptions = [
   { value: "both", label: "Either", hint: "Let the buyer choose" },
 ];
 
-export const cities: { name: string; zones: string[] }[] = [
-  { name: "Lahore", zones: ["Emporium Mall, Johar Town", "Packages Mall, Walton Road"] },
-  { name: "Karachi", zones: ["Dolmen Mall, Clifton", "Lucky One Mall, Rashid Minhas Road"] },
-  { name: "Islamabad", zones: ["Centaurus Mall, F-8", "Safa Gold Mall, F-7"] },
-  { name: "Faisalabad", zones: ["Lyallpur Galleria, Canal Road"] },
-  { name: "Multan", zones: ["Mall of Multan, Abdali Road"] },
+export type Box = { north: number; south: number; east: number; west: number };
+
+/** `box` is the rough outline of the city; meetup search is limited to it when Google Places is on. */
+export const cities: { name: string; zones: string[]; box: Box }[] = [
+  { name: "Lahore", zones: ["Emporium Mall, Johar Town", "Packages Mall, Walton Road"], box: { north: 31.68, south: 31.3, east: 74.58, west: 74.1 } },
+  { name: "Karachi", zones: ["Dolmen Mall, Clifton", "Lucky One Mall, Rashid Minhas Road"], box: { north: 25.2, south: 24.72, east: 67.45, west: 66.8 } },
+  { name: "Islamabad", zones: ["Centaurus Mall, F-8", "Safa Gold Mall, F-7"], box: { north: 33.85, south: 33.45, east: 73.3, west: 72.75 } },
+  { name: "Faisalabad", zones: ["Lyallpur Galleria, Canal Road"], box: { north: 31.6, south: 31.3, east: 73.3, west: 72.95 } },
+  { name: "Multan", zones: ["Mall of Multan, Abdali Road"], box: { north: 30.3, south: 30.1, east: 71.65, west: 71.35 } },
+];
+
+/** Used to check a typed city when Google Places is off. */
+export const pkCities = [
+  "Karachi", "Lahore", "Islamabad", "Rawalpindi", "Faisalabad", "Multan", "Peshawar", "Quetta", "Hyderabad", "Gujranwala",
+  "Sialkot", "Sargodha", "Bahawalpur", "Sukkur", "Larkana", "Sheikhupura", "Rahim Yar Khan", "Jhang", "Gujrat", "Mardan",
+  "Kasur", "Mingora", "Dera Ghazi Khan", "Nawabshah", "Sahiwal", "Okara", "Wah Cantonment", "Mirpur Khas", "Chiniot",
+  "Abbottabad", "Mirpur", "Muzaffarabad", "Gilgit", "Skardu", "Jhelum", "Attock", "Murree", "Mansehra", "Kohat", "Bannu",
+  "Gwadar", "Turbat", "Khuzdar", "Sadiqabad", "Kamoke", "Burewala", "Jacobabad", "Hafizabad", "Mandi Bahauddin", "Narowal",
+  "Vehari", "Khanewal", "Chakwal", "Daska", "Gojra", "Muridke", "Kotli", "Haripur", "Nowshera", "Charsadda", "Swabi", "Dadu",
+  "Shikarpur", "Khairpur", "Bhakkar", "Layyah", "Lodhran", "Pakpattan", "Toba Tek Singh", "Mianwali", "Taxila", "Rawalakot",
+  "Chitral", "Hunza", "Zhob", "Loralai", "Sibi", "Kharian", "Wazirabad", "Ahmedpur East", "Kotri", "Jaranwala",
 ];
 
 export const STEPS = [

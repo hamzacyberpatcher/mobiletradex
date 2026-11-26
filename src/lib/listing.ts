@@ -1,4 +1,4 @@
-import { ageOptions, issueOptions, phoneBrands, type PhoneModel } from "@/data/listing";
+import { ageOptions, issueOptions, phoneBrands, type Box, type PhoneModel } from "@/data/listing";
 
 /** Everything the seller enters. Saved to localStorage as a draft (photos are not). */
 export type Draft = {
@@ -8,6 +8,8 @@ export type Draft = {
   idVerified: boolean;
   brand: string;
   model: string;
+  /** model typed by hand because it is not in our list */
+  customModel: boolean;
   storage: string;
   ram: string;
   color: string;
@@ -28,7 +30,15 @@ export type Draft = {
   negotiable: boolean;
   payment: string;
   city: string;
+  /** city typed or searched because it is not in our list */
+  cityCustom: boolean;
+  /** the typed or searched city was checked and is in Pakistan */
+  cityVerified: boolean;
+  /** outline of that city (Google Places only), limits the meetup search */
+  cityBox: Box | null;
   meetup: string;
+  /** meetup place searched or typed instead of one of our safe zones */
+  meetupCustom: boolean;
   terms: boolean;
 };
 
@@ -39,6 +49,7 @@ export const EMPTY_DRAFT: Draft = {
   idVerified: false,
   brand: "",
   model: "",
+  customModel: false,
   storage: "",
   ram: "",
   color: "",
@@ -58,7 +69,11 @@ export const EMPTY_DRAFT: Draft = {
   negotiable: true,
   payment: "escrow",
   city: "",
+  cityCustom: false,
+  cityVerified: false,
+  cityBox: null,
   meetup: "",
+  meetupCustom: false,
   terms: false,
 };
 
@@ -229,6 +244,86 @@ export function suggestPrice(d: Draft) {
   return { low: round(v * 0.92), fair: round(v), high: round(v * 1.08), factors: f, base: m.base };
 }
 
+/* ---------- live field checks ---------- */
+
+/**
+ * One rule per text box. `error` is a mistake (shown red as soon as it happens);
+ * `hint` is just "not finished yet" (shown grey, e.g. "5 of 13 digits").
+ */
+export type Check = { ok: boolean; error?: string; hint?: string };
+
+const count = (n: number, of: number, unit = "digits") => `${n} of ${of} ${unit}`;
+
+export const check = {
+  name(v: string): Check {
+    if (/[^\p{L}\s.'-]/u.test(v)) return { ok: false, error: "Names can only contain letters and spaces." };
+    const n = (v.match(/\p{L}/gu) ?? []).length;
+    return n >= 3 ? { ok: true } : { ok: false, hint: `${count(n, 3, "letters")} so far, keep typing` };
+  },
+  cnic(v: string): Check {
+    const d = digits(v);
+    if (d && !/^[1-8]/.test(d)) return { ok: false, error: "A CNIC starts with a digit from 1 to 8, not 0 or 9." };
+    if (d.length === 13 && /^(\d)\1+$/.test(d)) return { ok: false, error: "This CNIC does not look right. Check every digit against your card." };
+    return d.length === 13 ? { ok: true } : { ok: false, hint: count(d.length, 13) };
+  },
+  phone(v: string): Check {
+    const d = digits(v);
+    if ((d.length >= 1 && d[0] !== "0") || (d.length >= 2 && d[1] !== "3")) return { ok: false, error: "Mobile numbers in Pakistan start with 03, for example 0300-1234567." };
+    return d.length === 11 ? { ok: true } : { ok: false, hint: count(d.length, 11) };
+  },
+  imei(v: string): Check {
+    const d = digits(v);
+    if (d.length === 15 && !luhn(d)) return { ok: false, error: "This IMEI is not valid. Check each digit against *#06#." };
+    return d.length === 15 ? { ok: true } : { ok: false, hint: count(d.length, 15) };
+  },
+  model(v: string): Check {
+    if (/[^\p{L}\p{N}\s.\-+/()]/u.test(v)) return { ok: false, error: "Model names can only contain letters, numbers and - + . / ( )." };
+    return v.trim().length >= 2 ? { ok: true } : { ok: false, hint: "Enter at least 2 characters" };
+  },
+  price(v: string): Check {
+    const p = Number(digits(v));
+    if (p > 1500000) return { ok: false, error: "Prices go up to Rs 1,500,000. Check for an extra zero." };
+    return p >= 2000 ? { ok: true } : { ok: false, hint: "The lowest price is Rs 2,000" };
+  },
+  place(v: string): Check {
+    return v.trim().length >= 3 ? { ok: true } : { ok: false, hint: "Enter at least 3 characters" };
+  },
+};
+
+/** Text boxes whose problems show live: error key -> current value and its rule. */
+function liveFields(d: Draft): Record<string, [string, Check]> {
+  const f: Record<string, [string, Check]> = {
+    name: [d.name, check.name(d.name)],
+    cnic: [d.cnic, check.cnic(d.cnic)],
+    phone: [d.phone, check.phone(d.phone)],
+    imei: [d.imei, check.imei(d.imei)],
+    price: [d.price, check.price(d.price)],
+  };
+  if (d.customModel) f.model = [d.model, check.model(d.model)];
+  if (d.meetupCustom) f.meetup = [d.meetup, check.place(d.meetup)];
+  return f;
+}
+
+/** What to show under each non-empty text box right now. Empty boxes show nothing. */
+export function live(d: Draft): { errors: Errors; hints: Errors } {
+  const errors: Errors = {};
+  const hints: Errors = {};
+  for (const [key, [value, c]] of Object.entries(liveFields(d))) {
+    if (!value.trim() || c.ok) continue;
+    if (c.error) errors[key] = c.error;
+    else if (c.hint) hints[key] = c.hint;
+  }
+  return { errors, hints };
+}
+
+/** Short names for the "Still needed" line next to Continue. */
+export const FIELD_LABELS: Record<string, string> = {
+  name: "your name", cnic: "CNIC", phone: "mobile number", verify: "identity check", brand: "brand", model: "model",
+  storage: "storage", ram: "RAM", color: "colour", pta: "PTA status", imei: "IMEI", age: "how long you used it",
+  screen: "screen", body: "frame and back", panel: "repairs", test: "hardware test", photos: "required photos",
+  price: "asking price", city: "city", meetup: "meetup place", terms: "your confirmation",
+};
+
 /* ---------- validation per step ---------- */
 
 export const REQUIRED_PHOTOS = ["front", "back", "screenOn", "sides"];
@@ -236,21 +331,22 @@ export const REQUIRED_PHOTOS = ["front", "back", "screenOn", "sides"];
 export function validate(step: number, d: Draft, photos: Photos): Errors {
   const e: Errors = {};
   if (step === 0) {
-    if (d.name.trim().length < 3 || !/[a-z]/i.test(d.name)) e.name = "Enter your full name as it appears on your CNIC.";
-    if (digits(d.cnic).length !== 13) e.cnic = "A CNIC has 13 digits, for example 35202-1234567-1.";
-    if (!/^03\d{9}$/.test(digits(d.phone))) e.phone = "Enter an 11-digit mobile number starting with 03.";
+    if (!check.name(d.name).ok) e.name = check.name(d.name).error ?? "Enter your full name as it appears on your CNIC.";
+    if (!check.cnic(d.cnic).ok) e.cnic = check.cnic(d.cnic).error ?? "A CNIC has 13 digits, for example 35202-1234567-1.";
+    if (!check.phone(d.phone).ok) e.phone = check.phone(d.phone).error ?? "Enter an 11-digit mobile number starting with 03.";
     if (!d.idVerified) e.verify = "Verify your CNIC and mobile number to continue.";
   }
   if (step === 1) {
     const m = modelOf(d);
     if (!d.brand) e.brand = "Choose your phone's brand.";
-    else if (!m) e.model = "Choose your model from the list.";
-    if (m && !d.storage) e.storage = "Choose the storage size.";
-    if (m && !d.ram) e.ram = "Choose the RAM.";
+    else if (d.customModel) {
+      if (!check.model(d.model).ok) e.model = check.model(d.model).error ?? "Enter your phone's model name, as shown in Settings, About phone.";
+    } else if (!m) e.model = "Choose your model, or pick \"My model isn't listed\".";
+    if ((m || d.customModel) && !d.storage) e.storage = "Choose the storage size.";
+    if ((m || d.customModel) && !d.ram) e.ram = "Choose the RAM.";
     if (!d.color) e.color = "Choose the colour.";
     if (!d.pta) e.pta = "Tell buyers whether the phone is PTA approved.";
-    if (digits(d.imei).length !== 15) e.imei = `The IMEI has 15 digits (you entered ${digits(d.imei).length}). Dial *#06# to see it.`;
-    else if (!luhn(d.imei)) e.imei = "This IMEI is not valid. Check each digit against *#06#.";
+    if (!check.imei(d.imei).ok) e.imei = check.imei(d.imei).error ?? `The IMEI has 15 digits (you entered ${digits(d.imei).length}). Dial *#06# to see it.`;
     if (!d.age) e.age = "Choose how long you have used the phone.";
   }
   if (step === 2) {
@@ -266,12 +362,10 @@ export function validate(step: number, d: Draft, photos: Photos): Errors {
     if (missing.length) e.photos = `Add ${missing.length} more required photo${missing.length > 1 ? "s" : ""} to continue.`;
   }
   if (step === 5) {
-    const p = Number(digits(d.price));
-    if (!d.price) e.price = "Enter the price you want to receive.";
-    else if (p < 2000) e.price = "Prices start from Rs 2,000.";
-    else if (p > 1500000) e.price = "Prices go up to Rs 1,500,000. Check for an extra zero.";
-    if (!d.city) e.city = "Choose your city.";
-    if (d.city && !d.meetup) e.meetup = "Choose a safe meetup zone.";
+    if (!check.price(d.price).ok) e.price = check.price(d.price).error ?? (d.price ? "Prices start from Rs 2,000." : "Enter the price you want to receive.");
+    if (!d.city.trim()) e.city = d.cityCustom ? "Enter or search for your city." : "Choose your city.";
+    else if (d.cityCustom && !d.cityVerified) e.city = "Pick a city in Pakistan from the suggestions, or type its exact name.";
+    else if (!d.meetup.trim() || (d.meetupCustom && !check.place(d.meetup).ok)) e.meetup = d.meetupCustom ? "Search for or type the meetup place." : "Choose a meetup place.";
   }
   if (step === 6) {
     if (!d.terms) e.terms = "Confirm the details are accurate before publishing.";

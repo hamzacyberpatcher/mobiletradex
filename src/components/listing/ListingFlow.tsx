@@ -7,7 +7,7 @@ import Dialog from "@/components/Dialog";
 import Header from "@/components/Header";
 import { useToast } from "@/components/ToastProvider";
 import { STEPS } from "@/data/listing";
-import { DRAFT_KEY, EMPTY_DRAFT, deviceTitle, rs, validate, type Draft, type Photos, type Saved } from "@/lib/listing";
+import { DRAFT_KEY, EMPTY_DRAFT, FIELD_LABELS, deviceTitle, live, rs, validate, type Draft, type Photos, type Saved } from "@/lib/listing";
 import IdentityStep from "./IdentityStep";
 import DeviceStep from "./DeviceStep";
 import ConditionStep from "./ConditionStep";
@@ -43,7 +43,6 @@ export default function ListingFlow() {
   const [step, setStep] = useState(0);
   const [maxStep, setMaxStep] = useState(0);
   const [photos, setPhotos] = useState<Photos>({});
-  const [showErrors, setShowErrors] = useState(false);
   const [modal, setModal] = useState<Modal>(null);
   const [ready, setReady] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
@@ -98,33 +97,18 @@ export default function ListingFlow() {
   }, [step, published]);
 
   const allErrors = useMemo(() => validate(step, draft, photos), [step, draft, photos]);
-  const errors = showErrors ? allErrors : {};
-  const errorCount = Object.keys(allErrors).length;
+  // text boxes show their problem the moment something is typed; Continue stays off until nothing is missing
+  const { errors, hints } = useMemo(() => live(draft), [draft]);
+  const missing = Object.keys(allErrors);
+  const errorCount = missing.length;
   const meta = STEPS[step];
   const photoCount = Object.keys(photos).length;
 
-  const goTo = (i: number) => {
-    setShowErrors(false);
-    setStep(i);
-  };
-
-  const focusFirstInvalid = () =>
-    requestAnimationFrame(() => {
-      const el = document.querySelector<HTMLElement>('[aria-invalid="true"]');
-      if (!el) return;
-      el.scrollIntoView({ block: "center", behavior: "smooth" });
-      (el.matches("input,button,textarea,select,[tabindex]") ? el : el.querySelector<HTMLElement>("button,input"))?.focus({ preventScroll: true });
-    });
+  const goTo = (i: number) => setStep(i);
 
   const next = () => {
-    if (errorCount) {
-      setShowErrors(true);
-      toast(`${errorCount} ${errorCount === 1 ? "thing needs" : "things need"} fixing before you can continue.`, { kind: "error" });
-      focusFirstInvalid();
-      return;
-    }
+    if (errorCount) return;
     if (step === STEPS.length - 1) return setModal("publish");
-    setShowErrors(false);
     setMaxStep((m) => Math.max(m, step + 1));
     setStep(step + 1);
   };
@@ -143,7 +127,6 @@ export default function ListingFlow() {
     setStep(0);
     setMaxStep(0);
     setPhotos({});
-    setShowErrors(false);
     setSavedAt(null);
     setPublished(null);
   };
@@ -167,7 +150,7 @@ export default function ListingFlow() {
     });
   };
 
-  const common = { draft, set, errors };
+  const common = { draft, set, errors, hints };
 
   if (published) {
     return (
@@ -261,8 +244,10 @@ export default function ListingFlow() {
               <span />
             )}
             <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-4">
-              <p aria-live="polite" className="text-sm text-crack">{showErrors && errorCount ? `${errorCount} to fix above` : ""}</p>
-              <button type="button" onClick={next} className="btn btn-primary">
+              <p id="still-needed" aria-live="polite" className="max-w-[22rem] text-sm text-ink/70 sm:text-right">
+                {errorCount ? `Still needed: ${missing.map((k) => FIELD_LABELS[k] ?? k).join(", ")}.` : ""}
+              </p>
+              <button type="button" onClick={next} disabled={errorCount > 0} aria-describedby="still-needed" className="btn btn-primary disabled:cursor-not-allowed disabled:opacity-50">
                 {step === STEPS.length - 1 ? "Publish listing" : `Continue to ${STEPS[step + 1].label.toLowerCase()}`}
               </button>
             </div>
