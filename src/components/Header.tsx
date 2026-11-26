@@ -28,7 +28,23 @@ type Highlight = { x: number; y: number; w: number; h: number; on: boolean };
  * the page that, once you scroll, narrows towards the middle and turns into a
  * rounded, blurred glass bar. Links get a sliding hover pill.
  */
-export default function Header() {
+export default function Header({
+  variant = "landing",
+  status,
+  action,
+  progress,
+  onLogo,
+}: {
+  /** "sell" is the same bar on the listing page: links go back to the landing sections */
+  variant?: "landing" | "sell";
+  status?: React.ReactNode;
+  action?: { label: string; onClick: () => void };
+  /** 0..100. When given, the thin bar shows this (listing progress) instead of page scroll. */
+  progress?: number;
+  onLogo?: () => void;
+}) {
+  const sell = variant === "sell";
+  const prefix = sell ? "/" : "";
   const [scrolled, setScrolled] = useState(false);
   const [hl, setHl] = useState<Highlight>({ x: 0, y: 0, w: 0, h: 0, on: false });
   const linksRef = useRef<HTMLDivElement>(null);
@@ -39,6 +55,7 @@ export default function Header() {
     const onScroll = () => {
       setScrolled(window.scrollY > 64);
       // reading progress: where you are on the page (visibility of system status)
+      if (progress !== undefined) return;
       const max = document.documentElement.scrollHeight - window.innerHeight;
       const p = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
       if (barRef.current) barRef.current.style.transform = `scaleX(${p})`;
@@ -47,7 +64,7 @@ export default function Header() {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [progress]);
 
   const point = (e: React.MouseEvent<HTMLElement> | React.FocusEvent<HTMLElement>) => {
     const el = e.currentTarget;
@@ -64,18 +81,29 @@ export default function Header() {
         <div
           ref={meterRef}
           role="progressbar"
-          aria-label="Page scroll progress"
+          aria-label={sell ? "Listing progress" : "Page scroll progress"}
           aria-valuemin={0}
           aria-valuemax={100}
-          aria-valuenow={0}
-          className="pointer-events-none absolute inset-x-4 bottom-0 h-[3px] overflow-hidden rounded-full opacity-0 transition-opacity duration-300 group-data-[scrolled]:opacity-100"
+          aria-valuenow={progress !== undefined ? Math.round(progress) : 0}
+          className={`pointer-events-none absolute inset-x-4 bottom-0 h-[3px] overflow-hidden rounded-full transition-opacity duration-300 group-data-[scrolled]:opacity-100 ${sell ? "opacity-100" : "opacity-0"}`}
         >
-          <div ref={barRef} className="h-full origin-left bg-brand will-change-transform dark:bg-steel" style={{ transform: "scaleX(0)" }} />
+          <div
+            ref={barRef}
+            className={`h-full origin-left bg-brand will-change-transform dark:bg-steel ${sell ? "transition-transform duration-500 motion-reduce:transition-none" : ""}`}
+            style={{ transform: `scaleX(${progress !== undefined ? progress / 100 : 0})` }}
+          />
         </div>
-        <a href="#top" className="flex items-center gap-2 text-lg font-semibold tracking-tight">
-          <Mark />
-          MobileTradeX
-        </a>
+        {sell ? (
+          <Link href="/" onClick={onLogo} className="flex items-center gap-2 text-lg font-semibold tracking-tight">
+            <Mark />
+            MobileTradeX
+          </Link>
+        ) : (
+          <a href="#top" className="flex items-center gap-2 text-lg font-semibold tracking-tight">
+            <Mark />
+            MobileTradeX
+          </a>
+        )}
 
         <nav
           aria-label="Main"
@@ -94,25 +122,31 @@ export default function Header() {
             }}
           />
           {links.map((l) => (
-            <a
+            <Link
               key={l.href}
-              href={l.href}
+              href={prefix + l.href}
               onMouseEnter={point}
               onFocus={point}
               onBlur={clear}
               className="relative z-10 rounded-xl px-2.5 py-1.5 text-[13px] font-medium tracking-[0.04em] text-ink transition-transform active:scale-95 motion-reduce:transition-none"
             >
               {l.label}
-            </a>
+            </Link>
           ))}
         </nav>
 
         <div className="flex items-center gap-3">
-          <ConditionHud />
+          {sell ? status : <ConditionHud />}
           <ThemeToggle />
-          <Link href="/sell" className="btn btn-primary !px-5 !py-2 text-[0.95rem]">
-            Sell a phone
-          </Link>
+          {sell && action ? (
+            <button type="button" onClick={action.onClick} className="btn btn-primary !px-5 !py-2 text-[0.95rem]">
+              {action.label}
+            </button>
+          ) : (
+            <Link href="/sell" className="btn btn-primary !px-5 !py-2 text-[0.95rem]">
+              Sell a phone
+            </Link>
+          )}
         </div>
       </div>
     </header>

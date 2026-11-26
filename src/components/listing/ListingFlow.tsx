@@ -4,8 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Dialog from "@/components/Dialog";
-import ThemeToggle from "@/components/ThemeToggle";
-import { Mark } from "@/components/Header";
+import Header from "@/components/Header";
 import { useToast } from "@/components/ToastProvider";
 import { STEPS } from "@/data/listing";
 import { DRAFT_KEY, EMPTY_DRAFT, deviceTitle, rs, validate, type Draft, type Photos, type Saved } from "@/lib/listing";
@@ -271,7 +270,7 @@ export default function ListingFlow() {
         </section>
 
         <aside aria-label="Live preview" className="hidden lg:block">
-          <div className="sticky top-24">
+          <div className="sticky top-28">
             <p className="mb-3 text-sm font-medium text-ink/70">What buyers will see</p>
             <ListingPreview draft={draft} photos={photos} />
           </div>
@@ -438,25 +437,18 @@ function Shell({
 }) {
   return (
     <div className="min-h-svh bg-frost">
-      <header className="sticky top-0 z-40 border-b border-ink/10 bg-frost/85 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 md:px-6">
-          <Link href="/" onClick={onLogo} className="flex items-center gap-2 text-lg font-semibold tracking-tight">
-            <Mark />
-            MobileTradeX
-          </Link>
-          <div className="flex items-center gap-3">
-            <p aria-live="polite" className="hidden items-center gap-1.5 text-sm text-ink/65 sm:flex">
-              {savedAt ? <><Check size={13} /> Draft saved</> : stepLabel}
-            </p>
-            <ThemeToggle />
-            <button type="button" onClick={onExit} className="btn btn-quiet !px-5 !py-2 text-[0.95rem]">{exitLabel}</button>
-          </div>
-        </div>
-        <div role="progressbar" aria-label="Listing progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)} className="h-[3px] bg-ink/10">
-          <div className="h-full bg-brand transition-[width] duration-500 motion-reduce:transition-none dark:bg-steel" style={{ width: `${progress}%` }} />
-        </div>
-      </header>
-      <main className="mx-auto max-w-6xl px-4 pb-28 pt-8 md:px-6 md:pt-10">{children}</main>
+      <Header
+        variant="sell"
+        progress={progress}
+        onLogo={onLogo}
+        action={{ label: exitLabel, onClick: onExit }}
+        status={
+          <p aria-live="polite" className="hidden items-center gap-1.5 text-sm text-ink/65 md:flex">
+            {savedAt ? <><Check size={13} /> Draft saved</> : stepLabel}
+          </p>
+        }
+      />
+      <main className="mx-auto max-w-6xl px-4 pb-28 pt-28 md:px-6 md:pt-32">{children}</main>
     </div>
   );
 }

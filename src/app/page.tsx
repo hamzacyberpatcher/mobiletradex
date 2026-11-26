@@ -17,7 +17,7 @@ export default function Home() {
     <>
       <a
         href="#how"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-deep focus:px-4 focus:py-2 focus:text-frost-50"
+        className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:left-4 focus-visible:top-4 focus-visible:z-50 focus-visible:rounded-lg focus-visible:bg-deep focus-visible:px-4 focus-visible:py-2 focus-visible:text-frost-50"
       >
         Skip to content
       </a>
