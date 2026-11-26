@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Story from "./Story";
 import DecryptedText from "@/components/reactbits/DecryptedText";
 
@@ -24,9 +25,9 @@ export default function Hero() {
         <a href="#brands" className="btn btn-primary">
           Browse verified phones
         </a>
-        <a href="#cta" className="btn btn-quiet">
+        <Link href="/sell" className="btn btn-quiet">
           List your phone
-        </a>
+        </Link>
       </div>
     </Story>
   );

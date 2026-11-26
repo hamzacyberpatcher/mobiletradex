@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { members } from "@/data/content";
 
 export default function Footer() {
@@ -17,6 +18,7 @@ export default function Footer() {
             <li><a className="hover:text-snow" href="#services">Services</a></li>
             <li><a className="hover:text-snow" href="#brands">Brands</a></li>
             <li><a className="hover:text-snow" href="#reviews">Reviews</a></li>
+            <li><Link className="hover:text-snow" href="/sell">Sell a phone</Link></li>
           </ul>
         </nav>
         <div>

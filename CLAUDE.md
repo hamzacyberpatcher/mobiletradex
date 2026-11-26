@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-MobileTradeX: frontend-only high-fidelity prototype (HCI course, Phase 4) of a verified second-hand phone marketplace for Pakistan. No backend; all data is hard-coded. The four `.txt` files in the repo root (proposal, interview findings, phase brief, rubric) are the source of truth for content and are graded on typography, layout, color, realistic copy (no lorem ipsum), consistency, and dialogs/message boxes/progress indicators. Only the landing page exists so far.
+MobileTradeX: frontend-only high-fidelity prototype (HCI course, Phase 4) of a verified second-hand phone marketplace for Pakistan. No backend; all data is hard-coded. The four `.txt` files in the repo root (proposal, interview findings, phase brief, rubric) are the source of truth for content and are graded on typography, layout, color, realistic copy (no lorem ipsum), consistency, and dialogs/message boxes/progress indicators. The landing page and the `/sell` listing flow exist so far.
 
 ## Commands
 
@@ -58,6 +58,17 @@ Copy and data (services, brands, reviews, team members) live in `src/data/conten
 
 - `ToastProvider` / `useToast()` (mounted in `app/layout.tsx`): message boxes in an aria-live region, auto-dismiss that pauses on hover/focus, optional action button. Theme toggle uses it with **Undo** (Shneiderman 3 feedback + 6 easy reversal; Nielsen 1 and 3).
 - `Dialog.tsx`: modal with focus trap, Escape/close/backdrop exits, focus returns to the trigger (Norman: constraints and feedback; Nielsen 3). Uses `data-lenis-prevent` and locks `<html>` overflow so Lenis does not scroll behind it.
-- `sections/SellFlow.tsx`: opened by the CTA's "Slide to start selling". Confirm dialog (error prevention: says nothing is published yet) -> progress dialog (progress bar + step list, Cancel; cancelling shows a toast with **Resume**) -> closure summary (Shneiderman 5). `Cta.tsx` owns the open/resume state.
+- The old `SellFlow` dialog is gone: every sell entry point (header "Sell a phone", hero "List your phone", footer link, CTA slider `onDone`) goes to `/sell` (see Listing flow below).
 - Header scroll-progress bar (`role="progressbar"`, updated in the existing scroll handler, visible once the header turns into the glass bar): visibility of system status.
-- Still to do for the rubric: error/validation message boxes, destructive-action confirmation, and the other screens (see the Phase 4 brief).
+- Still to do for the rubric: the buyer-side screens (browse, listing detail, offers, escrow, chat, account) and the heuristic workbook.
+
+## Listing flow (`/sell`)
+
+A normal route with its own sticky header (logo, draft-saved status, `ThemeToggle`, Save & exit); no 3D canvas. `app/sell/page.tsx` renders `components/listing/ListingFlow.tsx`, which owns all state (`Draft` in `lib/listing.ts`), step navigation and the dialogs.
+
+- Seven steps, in order: Identity (CNIC/mobile, simulated NADRA check + OTP; prototype rules: CNIC starting `11111` fails, OTP is `123456`), Device (brand logos from `public/brands`, model, specs, PTA, IMEI with Luhn check), Condition (screen, body, repairs, battery, faults; grade derived in `gradeOf`), Hardware test (simulated from the entered condition, progress + Cancel/Resume toast), Photos (local object URLs only, not saved with the draft), Price (`suggestPrice`: base price in `data/listing.ts` x factors, range bar, feedback, payment, city/meetup), Review and publish (Edit per section, terms, publish dialog -> success).
+- Data lives in `data/listing.ts` (models with base prices, option lists, `STEPS` copy); validation per step in `validate()`; errors only show after pressing Continue (`showErrors`), then focus jumps to the first `[aria-invalid="true"]`. Keep that attribute on new invalid fields.
+- `ListingPreview` is the right-hand (desktop) / collapsible (mobile) live card in the fixed order name, specs, condition (defects first), price, from the interview findings. Keep that order.
+- Draft autosaves to localStorage `mtx-listing-draft`; reloading offers Continue draft / Start over. Save & exit and Discard (with Undo toast) are dialogs; publishing is confirm -> progress -> success screen.
+- Shared form parts are in `listing/ui.tsx` (`Field`, `ChipGroup`, `Callout`, `ProgressBar`, `StageList`); use them for any new step so fields look identical. Tokens only, no hex.
+

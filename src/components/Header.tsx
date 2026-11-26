@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import ConditionHud from "./ConditionHud";
 import ThemeToggle from "./ThemeToggle";
@@ -11,7 +12,7 @@ const links = [
   { href: "#reviews", label: "Reviews" },
 ];
 
-function Mark() {
+export function Mark() {
   return (
     <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden className="text-deep">
       <rect x="6" y="1.5" width="14" height="23" rx="4" fill="none" stroke="currentColor" strokeWidth="2" />
@@ -109,9 +110,9 @@ export default function Header() {
         <div className="flex items-center gap-3">
           <ConditionHud />
           <ThemeToggle />
-          <a href="#cta" className="btn btn-primary !px-5 !py-2 text-[0.95rem]">
+          <Link href="/sell" className="btn btn-primary !px-5 !py-2 text-[0.95rem]">
             Sell a phone
-          </a>
+          </Link>
         </div>
       </div>
     </header>
