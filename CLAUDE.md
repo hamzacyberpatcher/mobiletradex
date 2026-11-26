@@ -17,6 +17,8 @@ corepack pnpm@9.15.0 exec tsc --noEmit         # type-check (the "lint" script; 
 corepack pnpm@9.15.0 exec next build           # production build
 ```
 
+Git: no user identity is configured on this machine. Existing commits use `MobileTradeX <noreply@users.noreply.github.com>`; pass it per commit with `git -c user.name=... -c user.email=...` rather than editing git config. The remote is `origin` (GitHub, `main`). If port 3000 is already taken by another dev server, point the browser at it instead of starting a second one.
+
 Pin `typescript@5` (v7 is too new for Next 15). Tailwind is v3 (`tailwind.config.ts`), not v4. Fonts come from `next/font/google`, so builds need network.
 
 ## Architecture
@@ -32,6 +34,8 @@ The page is a normal DOM scroll layout with one **fixed full-viewport r3f `<Canv
 - `components/sections/Story.tsx` wraps transparent sections: text on the left 56% on desktop (phone owns the right half), bottom-aligned frosted panel on screens under `lg` (1024px), where the phone moves to the top centre and is halved in size.
 
 Copy and data (services, brands, reviews, team members) live in `src/data/content.ts`. Palette tokens (`deep`, `steel`, `mist`, `frost`, `reed`, `ink`, `crack`) are in `tailwind.config.ts`; shared utility classes (`.btn`, `.story-panel`, `.h-section`) are in `src/app/globals.css`.
+
+Routes: `/` is the landing page above. `/sell` is a separate route with no canvas, no Lenis and no story keyframes, so changes to `story.ts` or the landing sections never affect it. `Header.tsx` exports `Mark` (the logo glyph), which `/sell` reuses.
 
 ## Interaction layer
 
@@ -71,4 +75,5 @@ A normal route with its own sticky header (logo, draft-saved status, `ThemeToggl
 - `ListingPreview` is the right-hand (desktop) / collapsible (mobile) live card in the fixed order name, specs, condition (defects first), price, from the interview findings. Keep that order.
 - Draft autosaves to localStorage `mtx-listing-draft`; reloading offers Continue draft / Start over. Save & exit and Discard (with Undo toast) are dialogs; publishing is confirm -> progress -> success screen.
 - Shared form parts are in `listing/ui.tsx` (`Field`, `ChipGroup`, `Callout`, `ProgressBar`, `StageList`); use them for any new step so fields look identical. Tokens only, no hex.
-
+- Testing tips: the step inputs are React-controlled, so when scripting them from the browser console set the value through the native `HTMLInputElement.prototype.value` setter and dispatch an `input` event. Valid sample IMEI: `356938035643809`. Clear `mtx-listing-draft` from localStorage between runs, or the Continue draft dialog appears.
+- Entry points to `/sell`: `Header` and `Hero` and `Footer` use `next/link`; `Cta` calls `router.push("/sell")` after the slider finishes. Keep any new "sell" button pointing at the same route.
