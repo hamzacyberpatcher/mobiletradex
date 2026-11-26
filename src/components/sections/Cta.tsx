@@ -2,8 +2,24 @@
 
 import Silk from "@/components/reactbits/Silk";
 import SlideCommit from "@/components/reactbits/SlideCommit";
+import SellFlow from "@/components/sections/SellFlow";
+import { useState } from "react";
 
 export default function Cta() {
+  const [open, setOpen] = useState(false);
+  const [resumeAt, setResumeAt] = useState<number | null>(null);
+
+  // onClose(n >= 0): paused at step n; onClose(n < 0): "Resume" pressed for step -1 - n
+  const handleClose = (arg?: number) => {
+    if (arg !== undefined && arg < 0) {
+      setResumeAt(-1 - arg);
+      setOpen(true);
+    } else {
+      setOpen(false);
+      setResumeAt(null);
+    }
+  };
+
   return (
     <section id="cta" className="relative z-10 overflow-hidden bg-brand text-snow">
       <div className="absolute inset-0" aria-hidden>
@@ -28,6 +44,7 @@ export default function Cta() {
               handleColor="#2E5E8E"
               successColor="#C5C49B"
               onConfirm={() => new Promise((resolve) => setTimeout(resolve, 700))}
+              onDone={() => setTimeout(() => setOpen(true), 450)}
             />
             <a href="#brands" className="btn border border-snow/50 text-snow hover:bg-snow/10">
               Browse verified phones
@@ -35,6 +52,7 @@ export default function Cta() {
           </div>
         </div>
       </div>
+      <SellFlow open={open} resumeAt={resumeAt} onClose={handleClose} />
     </section>
   );
 }

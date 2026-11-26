@@ -8,6 +8,16 @@ const config: Config = {
   content: ["./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
+      keyframes: {
+        "toast-in": { from: { opacity: "0", transform: "translateY(12px) scale(0.98)" }, to: { opacity: "1", transform: "none" } },
+        "fade-in": { from: { opacity: "0" }, to: { opacity: "1" } },
+        "dialog-in": { from: { opacity: "0", transform: "translateY(16px) scale(0.97)" }, to: { opacity: "1", transform: "none" } },
+      },
+      animation: {
+        "toast-in": "toast-in 260ms cubic-bezier(0.23,1,0.32,1) both",
+        "fade-in": "fade-in 200ms ease-out both",
+        "dialog-in": "dialog-in 300ms cubic-bezier(0.23,1,0.32,1) both",
+      },
       colors: {
         // theme-aware: values change between light and dark (see globals.css)
         frost: { DEFAULT: v("frost"), 50: v("frost-50") },

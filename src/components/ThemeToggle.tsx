@@ -1,17 +1,29 @@
 "use client";
 
 import { useTheme } from "./ThemeProvider";
+import { useToast } from "./ToastProvider";
 
 /**
  * Light/dark switch. Both icons are always rendered and swapped with the
  * `dark:` variant, so the right one shows from first paint with no flicker.
  */
 export default function ThemeToggle() {
-  const { theme, toggle } = useTheme();
+  const { theme, setTheme } = useTheme();
+  const { toast } = useToast();
+  // feedback + easy reversal: every switch says what changed and offers Undo
+  const onClick = () => {
+    const prev = document.documentElement.classList.contains("dark") ? "dark" : "light";
+    const next = prev === "dark" ? "light" : "dark";
+    setTheme(next);
+    toast(`Switched to ${next} mode.`, {
+      duration: 4500,
+      action: { label: "Undo", onClick: () => setTheme(prev) },
+    });
+  };
   return (
     <button
       type="button"
-      onClick={toggle}
+      onClick={onClick}
       aria-pressed={theme === "dark"}
       aria-label="Dark mode"
       title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}

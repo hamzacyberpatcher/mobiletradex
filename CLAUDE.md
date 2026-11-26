@@ -53,3 +53,11 @@ Copy and data (services, brands, reviews, team members) live in `src/data/conten
 ## Reviews section
 
 `sections/Reviews.tsx`: a `DotGrid` background, `RatingSummary` (CountUp + bars; sample figures in `ratingSummary`), filter chips by `group`, and `FlipCard`s whose front is an `EvidencePhoto` (SVG placeholder per `evidence` kind; swap for real `<img>` when real photos exist) and back is the review. Cards animate on filter with `motion` `layout`/`AnimatePresence`; the grid reserves two rows of height on desktop so the page doesn't jump when filtering. Add reviews in `data/content.ts` (`reviews`), keeping each group at an even count.
+
+## Usability principles layer (Phase 4 rubric: dialogs, message boxes, progress indicators)
+
+- `ToastProvider` / `useToast()` (mounted in `app/layout.tsx`): message boxes in an aria-live region, auto-dismiss that pauses on hover/focus, optional action button. Theme toggle uses it with **Undo** (Shneiderman 3 feedback + 6 easy reversal; Nielsen 1 and 3).
+- `Dialog.tsx`: modal with focus trap, Escape/close/backdrop exits, focus returns to the trigger (Norman: constraints and feedback; Nielsen 3). Uses `data-lenis-prevent` and locks `<html>` overflow so Lenis does not scroll behind it.
+- `sections/SellFlow.tsx`: opened by the CTA's "Slide to start selling". Confirm dialog (error prevention: says nothing is published yet) -> progress dialog (progress bar + step list, Cancel; cancelling shows a toast with **Resume**) -> closure summary (Shneiderman 5). `Cta.tsx` owns the open/resume state.
+- Header scroll-progress bar (`role="progressbar"`, updated in the existing scroll handler, visible once the header turns into the glass bar): visibility of system status.
+- Still to do for the rubric: error/validation message boxes, destructive-action confirmation, and the other screens (see the Phase 4 brief).

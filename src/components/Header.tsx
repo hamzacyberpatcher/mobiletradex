@@ -31,9 +31,18 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [hl, setHl] = useState<Highlight>({ x: 0, y: 0, w: 0, h: 0, on: false });
   const linksRef = useRef<HTMLDivElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
+  const meterRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 64);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 64);
+      // reading progress: where you are on the page (visibility of system status)
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const p = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+      if (barRef.current) barRef.current.style.transform = `scaleX(${p})`;
+      meterRef.current?.setAttribute("aria-valuenow", String(Math.round(p * 100)));
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -49,8 +58,19 @@ export default function Header() {
     <header className="pointer-events-none fixed inset-x-0 top-5 z-40 flex flex-col items-center px-4 md:px-6">
       <div
         data-scrolled={scrolled ? "" : undefined}
-        className="pointer-events-auto relative flex h-14 w-full max-w-full items-center justify-between rounded-2xl border border-transparent bg-transparent py-0 pl-4 pr-1.5 transition-[max-width,background-color,border-color,padding] duration-500 motion-reduce:transition-none md:max-w-[1680px] md:pl-5 md:pr-2 data-[scrolled]:border-ink/10 data-[scrolled]:bg-frost-50/80 data-[scrolled]:backdrop-blur-[24px] data-[scrolled]:backdrop-saturate-[1.4] md:data-[scrolled]:max-w-[1276px]"
+        className="group pointer-events-auto relative flex h-14 w-full max-w-full items-center justify-between rounded-2xl border border-transparent bg-transparent py-0 pl-4 pr-1.5 transition-[max-width,background-color,border-color,padding] duration-500 motion-reduce:transition-none md:max-w-[1680px] md:pl-5 md:pr-2 data-[scrolled]:border-ink/10 data-[scrolled]:bg-frost-50/80 data-[scrolled]:backdrop-blur-[24px] data-[scrolled]:backdrop-saturate-[1.4] md:data-[scrolled]:max-w-[1276px]"
       >
+        <div
+          ref={meterRef}
+          role="progressbar"
+          aria-label="Page scroll progress"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={0}
+          className="pointer-events-none absolute inset-x-4 bottom-0 h-[3px] overflow-hidden rounded-full opacity-0 transition-opacity duration-300 group-data-[scrolled]:opacity-100"
+        >
+          <div ref={barRef} className="h-full origin-left bg-brand will-change-transform dark:bg-steel" style={{ transform: "scaleX(0)" }} />
+        </div>
         <a href="#top" className="flex items-center gap-2 text-lg font-semibold tracking-tight">
           <Mark />
           MobileTradeX
