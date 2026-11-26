@@ -14,14 +14,14 @@ export default function Solution() {
   return (
     <Story index={2} id="how">
       <h2 className="h-section">Condition comes first, in the same order every time.</h2>
-      <p className="mt-5 max-w-[34rem] text-lg leading-relaxed text-ink/80">
+      <p className="mt-5 max-w-[42rem] text-lg leading-relaxed text-ink/80">
         Every listing follows one format: the phone, its specs, its condition,
         then the price. Damage isn&rsquo;t hidden. It&rsquo;s listed up front and
         reflected in the price. Repair the phone and run the test again, and
         the report updates.
       </p>
 
-      <div className="mt-7 max-w-[34rem]">
+      <div className="mt-7 max-w-[42rem]">
         <div className="mb-2 flex items-center justify-between gap-3">
           <span className="font-semibold">Listing report</span>
           <span className="rounded-full bg-deep px-3 py-1 text-xs font-medium text-frost-50">

@@ -15,7 +15,7 @@ export default function Hero() {
           encryptedClassName="text-steel"
         />
       </h1>
-      <p className="mt-6 max-w-[34rem] text-lg leading-relaxed text-ink/80 md:text-xl">
+      <p className="mt-6 max-w-[42rem] text-lg leading-relaxed text-ink/80 md:text-xl">
         MobileTradeX tests the hardware of every second-hand phone, checks its
         IMEI and the seller&rsquo;s CNIC, and holds your payment until you&rsquo;ve
         inspected it in person.

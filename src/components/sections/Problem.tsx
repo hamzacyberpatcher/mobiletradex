@@ -18,13 +18,13 @@ export default function Problem() {
         </GlitchText>{" "}
         is always in the last line.
       </h2>
-      <p className="mt-5 max-w-[34rem] text-lg leading-relaxed text-ink/80">
+      <p className="mt-5 max-w-[42rem] text-lg leading-relaxed text-ink/80">
         On classifieds, sellers can bury dents, panel changes and screen lines
         at the bottom of a long description. Most buyers don&rsquo;t read that
         far. They find out at the meetup.
       </p>
 
-      <figure className="mt-7 max-w-[34rem] rounded-xl border border-ink/15 bg-frost-50/80 p-5 font-mono text-[0.85rem] leading-relaxed">
+      <figure className="mt-7 max-w-[42rem] rounded-xl border border-ink/15 bg-frost-50/80 p-5 font-mono text-[0.85rem] leading-relaxed">
         <figcaption className="mb-3 font-sans text-sm text-ink/60">
           A typical listing, as written
         </figcaption>
@@ -51,7 +51,7 @@ export default function Problem() {
         </p>
       </figure>
 
-      <dl className="mt-7 grid max-w-[34rem] gap-3 text-[0.95rem]">
+      <dl className="mt-7 grid max-w-[42rem] gap-3 text-[0.95rem]">
         <div className="flex gap-3">
           <dt className="w-32 shrink-0 font-semibold">Buyers told us</dt>
           <dd className="text-ink/80">

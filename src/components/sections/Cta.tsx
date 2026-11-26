@@ -7,7 +7,7 @@ export default function Cta() {
   return (
     <section id="cta" className="relative z-10 overflow-hidden bg-brand text-snow">
       <div className="absolute inset-0" aria-hidden>
-        <Silk color="#2E5E8E" sheenColor="#B7C9D8" speed={4} noiseIntensity={1.1} />
+        <Silk color="#2E5E8E" sheenColor="#B7C9D8" noiseIntensity={1.1} paused intro={false} mouseInteraction={false} clickRipple={false} />
       </div>
       <div className="relative px-5 py-28 md:px-8 md:py-40">
         <div className="mx-auto max-w-7xl">

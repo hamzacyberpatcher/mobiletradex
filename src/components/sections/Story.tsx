@@ -21,7 +21,7 @@ export default function Story({
       className="relative z-10 flex min-h-[100svh] items-end px-5 pb-10 pt-28 md:px-8 lg:items-center lg:pb-16"
     >
       <div className="mx-auto w-full max-w-7xl">
-        <div className="story-panel lg:max-w-[46%]">
+        <div className="story-panel lg:max-w-[56%]">
           {children}
         </div>
       </div>

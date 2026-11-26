@@ -19,7 +19,7 @@ export default function Services() {
   return (
     <Story index={3} id="services">
       <h2 className="h-section">Built for both sides of the deal.</h2>
-      <p className="mt-4 max-w-[34rem] text-lg leading-relaxed text-ink/75">
+      <p className="mt-4 max-w-[42rem] text-lg leading-relaxed text-ink/75">
         Try each one. They work the way they will in the app.
       </p>
 
@@ -49,7 +49,7 @@ export default function Services() {
                     <h3 className="text-xl font-semibold tracking-tight">{s.title}</h3>
                     <span className="font-mono text-xs text-deep">{s.detail}</span>
                   </div>
-                  <p className="mt-2 max-w-[34rem] text-[0.95rem] leading-relaxed text-ink/75">{s.body}</p>
+                  <p className="mt-2 max-w-[42rem] text-[0.95rem] leading-relaxed text-ink/75">{s.body}</p>
                   <div className="mt-auto border-t border-ink/10 pt-4">
                     <Demo />
                   </div>
