@@ -22,9 +22,9 @@ export default function Hero() {
         inspected it in person.
       </p>
       <div className="mt-8 flex flex-wrap gap-3">
-        <a href="#brands" className="btn btn-primary">
+        <Link href="/browse" className="btn btn-primary">
           Browse verified phones
-        </a>
+        </Link>
         <Link href="/sell" className="btn btn-quiet">
           List your phone
         </Link>

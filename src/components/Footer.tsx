@@ -14,10 +14,12 @@ export default function Footer() {
         <nav aria-label="Footer">
           <p className="text-sm font-semibold">Explore</p>
           <ul className="mt-3 space-y-2 text-[0.95rem] text-mist">
+            <li><Link className="hover:text-snow" href="/browse">Browse phones</Link></li>
             <li><a className="hover:text-snow" href="#how">How it works</a></li>
             <li><a className="hover:text-snow" href="#services">Services</a></li>
             <li><a className="hover:text-snow" href="#brands">Brands</a></li>
             <li><a className="hover:text-snow" href="#reviews">Reviews</a></li>
+            <li><Link className="hover:text-snow" href="/chat">Messages</Link></li>
             <li><Link className="hover:text-snow" href="/sell">Sell a phone</Link></li>
           </ul>
         </nav>

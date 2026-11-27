@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-MobileTradeX: frontend-only high-fidelity prototype (HCI course, Phase 4) of a verified second-hand phone marketplace for Pakistan. No backend; all data is hard-coded. The four `.txt` files in the repo root (proposal, interview findings, phase brief, rubric) are the source of truth for content and are graded on typography, layout, color, realistic copy (no lorem ipsum), consistency, and dialogs/message boxes/progress indicators. The landing page and the `/sell` listing flow exist so far.
+MobileTradeX: frontend-only high-fidelity prototype (HCI course, Phase 4) of a verified second-hand phone marketplace for Pakistan. No backend; all data is hard-coded. The four `.txt` files in the repo root (proposal, interview findings, phase brief, rubric) are the source of truth for content and are graded on typography, layout, color, realistic copy (no lorem ipsum), consistency, and dialogs/message boxes/progress indicators. The landing page, the `/sell` listing flow, `/browse` (+ `/browse/[id]`) and a dummy `/chat` exist.
 
 ## Commands
 
@@ -64,7 +64,7 @@ Routes: `/` is the landing page above. `/sell` is a separate route with no canva
 - `Dialog.tsx`: modal with focus trap, Escape/close/backdrop exits, focus returns to the trigger (Norman: constraints and feedback; Nielsen 3). Uses `data-lenis-prevent` and locks `<html>` overflow so Lenis does not scroll behind it.
 - The old `SellFlow` dialog is gone: every sell entry point (header "Sell a phone", hero "List your phone", footer link, CTA slider `onDone`) goes to `/sell` (see Listing flow below).
 - Header scroll-progress bar (`role="progressbar"`, updated in the existing scroll handler, visible once the header turns into the glass bar): visibility of system status.
-- Still to do for the rubric: the buyer-side screens (browse, listing detail, offers, escrow, chat, account) and the heuristic workbook.
+- Still to do for the rubric: an account screen and the heuristic workbook.
 
 ## Listing flow (`/sell`)
 
@@ -81,3 +81,18 @@ A normal route with its own sticky header (logo, draft-saved status, `ThemeToggl
 - Google Places: `components/listing/PlacePicker.tsx` + `lib/maps.ts` load the Maps JS API with `PlaceAutocompleteElement` when `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` is set (copy `.env.example` to `.env.local`, which is gitignored; restart `next dev`). The key needs "Places API (New)" enabled and referrers that include `localhost:3000`. `lib/maps.ts` waits for `google.maps.importLibrary` after the script's `onload` (with `loading=async` it appears a moment later); if it never appears the picker falls back to typing and logs a `PlacePicker:` console warning.
 - City rules: "Another city" only accepts Pakistani cities. Google autocomplete is limited to `pk` localities and the pick's country is re-checked; a typed city goes through `resolveCity` (Google text search, then a name-similarity check, falling back to the `pkCities` list in `data/listing.ts` with no key) and shows an inline error such as "is not in Pakistan". The verified city and its outline are stored in `draft.cityVerified` / `draft.cityBox`; Continue is blocked until the city is verified.
 - Meetup rules: a "Somewhere else" meetup is searched with `locationRestriction` set to the city outline (`cities[].box` for the five listed cities, the Google viewport for other cities) and any pick outside the outline is refused. Typed meetups cannot be checked, which the field says.
+
+## Browse and listing detail (`/browse`, `/browse/[id]`)
+
+Same shell as `/sell`: `Header variant="browse"` (floating glass bar, "Browse" first in `links`), the dark `Footer`, tokens only, `Dialog`/toasts/`Callout`/`ProgressBar` reused. No canvas.
+
+- Data: `data/listings.ts` holds 36 dummy listings written in the same fields as the sell `Draft`; grade, defects, hardware report (`runTest`), fair value (`suggestPrice`) and IMEI are derived by `lib/listing.ts`, so a listing looks identical to the seller's preview. `asking = fair * (1 + off%)`. IMEIs are generated Luhn-valid. 8 sellers with closed-deal reviews (s8 is a new seller with none). Some listings are `tested: false`, `sold` or `reserved` to exercise those states.
+- Logic: `lib/browse.ts` has `Filters`/`DEFAULT_FILTERS`, `run()` (filter + similarity-ranked search + sort, sold/reserved sink last), `chipsOf()` (active filter chips with `clear`, used for removable chips and the "remove X to see N phones" empty-state suggestions), `valueTag`. Search weights name > brand > specs > location > defects > seller note; "128gb" matches "128 GB"; a listing needs ~60% of the words.
+- `BrowseApp.tsx`: search, sticky `FilterPanel` (desktop) / Filters `Dialog` (mobile), sort, chips, skeleton loading on every change (`busy`), "Show more" with progress, saved phones (`mtx-saved` in localStorage via `useSaved`), compare up to 3 (`CompareDialog`). Filters persist in sessionStorage `mtx-browse` so Back from a listing keeps them.
+- `ListingCard.tsx`: reading order name, specs, condition (defects first), price. `PhonePhoto.tsx` draws placeholder SVG photos from the listing (cracks, scuffs); swap for real images later.
+- `DetailView.tsx`: gallery (+ enlarge dialog), specs, condition with defects block first, price with fair-value bar and payment, hardware report, seller card with CNIC badge and closed-deal reviews (`EvidencePhoto`), similar phones, mobile action bar. `Dialogs.tsx`: `ContactDialog`, `OfferDialog`, `EscrowDialog` (explain -> pay -> progress -> done), `ReportDialog`. All simulated; toasts offer "Open chat".
+- `/chat` (`components/chat/ChatApp.tsx`, seed in `data/chat.ts`, derived from `listings`): local-state prototype with canned replies, number masking, structured offers, accept/decline dialogs.
+- Principles layer: keyboard shortcuts (`ShortcutsDialog`), `RecentStrip` + `useRecent` (`mtx-recent`), `MeetupChecklist` (per-listing `mtx-check-<id>`), Escape clears search. Mapping of every rule to the UI is in `DESIGN_PRINCIPLES.md`; keep it updated.
+- Floating chat: `components/chat/ChatWidget.tsx` is mounted in `app/browse/layout.tsx` (so it persists between /browse and /browse/[id]). Launcher bottom right, small window with conversation list and thread, expand icon links to the full `/chat`. On a listing page it opens that seller's conversation if one exists. Shared rules (masking, canned replies, templates) are in `lib/chat.ts`, also used by `ChatApp`. Widget state is separate from `/chat` (both start from `data/chat.ts`). `lift` raises it above the mobile action bars.
+- Infinite scroll: `BrowseApp` loads the next 12 when the sentinel under the grid nears the viewport (IntersectionObserver, 600 ms skeleton row), announces via `role=status`, ends with "You have seen all N phones" and Back to top. There is no Show more button. Note: IntersectionObserver only fires while the Browser pane tab is fronted.
+- Header `links` entries starting with `/` are real routes; `#...` entries resolve to landing sections.

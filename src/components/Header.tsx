@@ -6,10 +6,12 @@ import ConditionHud from "./ConditionHud";
 import ThemeToggle from "./ThemeToggle";
 
 const links = [
+  { href: "/browse", label: "Browse" },
   { href: "#how", label: "How it works" },
   { href: "#services", label: "Services" },
   { href: "#brands", label: "Brands" },
   { href: "#reviews", label: "Reviews" },
+  { href: "/chat", label: "Messages" },
 ];
 
 export function Mark() {
@@ -36,14 +38,14 @@ export default function Header({
   onLogo,
 }: {
   /** "sell" is the same bar on the listing page: links go back to the landing sections */
-  variant?: "landing" | "sell";
+  variant?: "landing" | "sell" | "chat" | "browse";
   status?: React.ReactNode;
   action?: { label: string; onClick: () => void };
   /** 0..100. When given, the thin bar shows this (listing progress) instead of page scroll. */
   progress?: number;
   onLogo?: () => void;
 }) {
-  const sell = variant === "sell";
+  const sell = variant !== "landing";
   const prefix = sell ? "/" : "";
   const [scrolled, setScrolled] = useState(false);
   const [hl, setHl] = useState<Highlight>({ x: 0, y: 0, w: 0, h: 0, on: false });
@@ -81,15 +83,15 @@ export default function Header({
         <div
           ref={meterRef}
           role="progressbar"
-          aria-label={sell ? "Listing progress" : "Page scroll progress"}
+          aria-label={variant === "sell" ? "Listing progress" : "Page scroll progress"}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={progress !== undefined ? Math.round(progress) : 0}
-          className={`pointer-events-none absolute inset-x-4 bottom-0 h-[3px] overflow-hidden rounded-full transition-opacity duration-300 group-data-[scrolled]:opacity-100 ${sell ? "opacity-100" : "opacity-0"}`}
+          className={`pointer-events-none absolute inset-x-4 bottom-0 h-[3px] overflow-hidden rounded-full transition-opacity duration-300 group-data-[scrolled]:opacity-100 ${progress !== undefined ? "opacity-100" : "opacity-0"}`}
         >
           <div
             ref={barRef}
-            className={`h-full origin-left bg-brand will-change-transform dark:bg-steel ${sell ? "transition-transform duration-500 motion-reduce:transition-none" : ""}`}
+            className={`h-full origin-left bg-brand will-change-transform dark:bg-steel ${progress !== undefined ? "transition-transform duration-500 motion-reduce:transition-none" : ""}`}
             style={{ transform: `scaleX(${progress !== undefined ? progress / 100 : 0})` }}
           />
         </div>
@@ -124,7 +126,7 @@ export default function Header({
           {links.map((l) => (
             <Link
               key={l.href}
-              href={prefix + l.href}
+              href={l.href.startsWith("#") ? prefix + l.href : l.href}
               onMouseEnter={point}
               onFocus={point}
               onBlur={clear}

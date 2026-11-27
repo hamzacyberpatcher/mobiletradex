@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import Silk from "@/components/reactbits/Silk";
 import SlideCommit from "@/components/reactbits/SlideCommit";
 import { useRouter } from "next/navigation";
@@ -35,9 +36,9 @@ export default function Cta() {
               onConfirm={() => new Promise((resolve) => setTimeout(resolve, 700))}
               onDone={() => setTimeout(() => router.push("/sell"), 450)}
             />
-            <a href="#brands" className="btn border border-snow/50 text-snow hover:bg-snow/10">
+            <Link href="/browse" className="btn border border-snow/50 text-snow hover:bg-snow/10">
               Browse verified phones
-            </a>
+            </Link>
           </div>
         </div>
       </div>
